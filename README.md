@@ -10,7 +10,7 @@
 
 ### Running
 
-./vo_solver_video_test config/config_cust.cfg data/flight1.mp4
+./vo_solver_video_test config/config_cust.cfg data/flight1.mp4 1
 
 Expected output:
 ```
