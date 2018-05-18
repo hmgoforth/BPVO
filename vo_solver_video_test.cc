@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 
     double * pose;
 
-    pose = bpvo_module.solver(gps_x, gps_y, alt, comp_heading, I);
+    pose = bpvo_module.solver(global_x, global_y, alt, comp_heading, I);
 
     std::cout << "pose = " << std::endl
       << "\t x: " << pose[0] << std::endl
