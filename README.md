@@ -63,7 +63,7 @@ returned as a pointer to a 1D array containing refined global_x, global_y, alt, 
 
 The input image to bpvo_module.solver must be non-null.
 
-Any of the telemetry inputs can be specified as -1. In this case, the function will ignore these
+Any of the telemetry inputs can be specified as INFINITY. In this case, the function will ignore these
 inputs, but still use the current image I to compute a refined pose.
 
 ### Simulation Test
