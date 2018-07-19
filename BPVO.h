@@ -44,6 +44,8 @@ class BPVO
     double* solver(double global_x, double global_y, double alt, double comp_heading, cv::Mat I_curr); 
 
     void set_template(cv::Mat I_tmp, double rp);
+
+    cv::Vec3f rotationMatrixToEulerAngles(cv::Mat R);
 };
 
 #endif

@@ -55,23 +55,36 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
   Returns:
     double*: pointer to array of refined telemetry (0:global_x, 1:global_y, 2:alt, 3:comp_heading)
   */
-
-  // std::cout << "last_dpose[0] = " << last_dpose[0] << std::endl << std::endl;
-  // std::cout << "last_dpose[1] = " << last_dpose[1] << std::endl << std::endl;
-  // std::cout << "last_dpose[2] = " << last_dpose[2] << std::endl << std::endl;
-
-  // std::cout << "curr_pose[0] = " << curr_pose[0] << std::endl << std::endl;
-  // std::cout << "curr_pose[1] = " << curr_pose[1] << std::endl << std::endl;
-  // std::cout << "curr_pose[2] = " << curr_pose[2] << std::endl << std::endl;
-
-  // std::cout << "global_x = " << global_x << std::endl << std::endl;
-  // std::cout << "global_y = " << global_y << std::endl << std::endl;
-  // std::cout << "alt = " << alt << std::endl << std::endl;
-  // std::cout << "comp_heading = " << comp_heading << std::endl << std::endl;
+  bool pr_dbg = false;
 
   if (!template_set_fl) {
-    // std::cout << "No template yet, setting now..." << std::endl << std::endl;
+   
+    if (pr_dbg) {
+      std::cout << "\tNo template yet, setting now..." << std::endl;
+      std::cout << "\tAlso setting initial pose using current inputs ..." << std::endl << std::endl;
+    }
+
     set_template(I_curr, class_rp);
+    
+    curr_pose[0] = global_x;
+    curr_pose[1] = global_y;
+    curr_pose[2] = alt;
+    curr_pose[3] = comp_heading;
+  }
+
+  if (pr_dbg) {
+    std::cout << "\tlast_dpose[0] = " << last_dpose[0] << std::endl;
+    std::cout << "\tlast_dpose[1] = " << last_dpose[1] << std::endl;
+    std::cout << "\tlast_dpose[2] = " << last_dpose[2] << std::endl << std::endl;
+
+    std::cout << "\tcurr_pose[0] = " << curr_pose[0] << std::endl;
+    std::cout << "\tcurr_pose[1] = " << curr_pose[1] << std::endl;
+    std::cout << "\tcurr_pose[2] = " << curr_pose[2] << std::endl << std::endl;
+
+    std::cout << "\tglobal_x = " << global_x << std::endl;
+    std::cout << "\tglobal_y = " << global_y << std::endl;
+    std::cout << "\talt = " << alt << std::endl;
+    std::cout << "\tcomp_heading = " << comp_heading << std::endl << std::endl;
   }
 
   if (cv::countNonZero(I_curr) < 1) { // empty image
@@ -89,16 +102,23 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
     }
   }
 
-  // std::cout << "K = " << std::endl << K << std::endl << std::endl;
-  // std::cout << "H_curr_cv: " << std::endl << H_curr_cv << std::endl << std::endl;
+  if (pr_dbg) {
+    std::cout << "\tK = " << std::endl << K << std::endl << std::endl;
+    std::cout << "\tH_curr_cv: " << std::endl << H_curr_cv << std::endl << std::endl;
+  }
 
-  cv::Mat H_noneuclid = K * H_curr_cv * K.inv(); 
+  cv::Mat H_noneuclid = K * H_curr_cv * K.inv();
 
-  // std::cout << "H_noneuclid = " << std::endl << H_noneuclid << std::endl << std::endl;
+
+  if (pr_dbg) {
+    std::cout << "\tH_noneuclid = " << std::endl << H_noneuclid << std::endl << std::endl;
+  }
 
   H_noneuclid /= H_noneuclid.at<float>(2,2);
 
-  // std::cout << "H_noneuclid nmlz = " << std::endl << H_noneuclid << std::endl << std::endl;
+  if (pr_dbg) {
+    std::cout << "\tH_noneuclid nmlz = " << std::endl << H_noneuclid << std::endl << std::endl;
+  }
 
   std::vector<cv::Mat> Rs_decomp, ts_decomp, normals_decomp;
 
@@ -106,10 +126,27 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
 
   cv::Mat tvec;
 
-  if (alt > 0) {
-    tvec = ts_decomp[0].t() * alt;
+  int decomp_ind = 0;
+  int min_euler_z = 10;
+
+  for (std::size_t i = 0, max = Rs_decomp.size(); i != max; ++i) {
+    cv::Vec3f euler_ang = rotationMatrixToEulerAngles(Rs_decomp[i]);
+    // std::cout << "euler_ang[" << i << "] = " << std::endl << euler_ang << std::endl << std::endl;
+    // std::cout << "ts_decomp[" << i << "] = " << std::endl << ts_decomp[i] << std::endl << std::endl;
+    // std::cout << "normals_decomp[" << i << "] = " << std::endl << normals_decomp[i] << std::endl << std::endl;
+    // std::cout << "normals_decomp[" << 2 << "] = " << std::endl << normals_decomp[i].at<double>(2) << std::endl << std::endl;
+    if (normals_decomp[i].at<double>(2) > 0) {
+      if (euler_ang[2] < min_euler_z) {
+        decomp_ind = i;
+      }
+    }
+
+  }
+
+  if ((K.at<float>(0,0) > 1) && (alt > 0)) {
+    tvec = ts_decomp[decomp_ind].t() * alt;
   } else {
-    tvec = ts_decomp[0].t();
+    tvec = ts_decomp[decomp_ind].t();
   }
 
   // must negate tvec to get translation from template to frame
@@ -118,14 +155,20 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
   // and negating x coord
   tvec.at<double>(0,0) = -tvec.at<double>(0,0);
 
-  // std::cout << "ts_decomp = " << std::endl << ts_decomp[0].t() << std::endl << std::endl;
-  // std::cout << "ts_decomp * alt = " << std::endl << tvec << std::endl << std::endl;
+  cv::Vec3f euler_ang = rotationMatrixToEulerAngles(Rs_decomp[decomp_ind]);
+
+  if (pr_dbg) {
+    std::cout << "\tts_decomp = " << std::endl << ts_decomp[0].t() << std::endl << std::endl;
+    std::cout << "\tts_decomp * alt = " << std::endl << tvec << std::endl << std::endl;
+    std::cout << "\teuler_ang = " << std::endl << euler_ang << std::endl << std::endl;
+    // std::cout << "euler_ang[2] = " << euler_ang[2] << std::endl << std::endl;
+  }
 
   double rad_heading;
 
-  if (comp_heading < 0) {
+  if (std::isinf(comp_heading)) {
 
-    rad_heading = curr_pose[3] / 180 * M_PI;
+    rad_heading = curr_pose[3] / 180 * M_PI + euler_ang[2];
 
   } else {
 
@@ -133,26 +176,35 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
 
   }
 
-  // std::cout << "rad_heading = " << rad_heading << std::endl << std::endl;
+  // wrap to 2pi
+  if (rad_heading < 0) {
+    rad_heading = 2 * M_PI + rad_heading;
+  } else if (rad_heading > (2 * M_PI)) {
+    rad_heading = rad_heading - 2 * M_PI;
+  }
 
   cv::Mat rot_mat = (cv::Mat_<double>(2,2) << cos(rad_heading), -sin(rad_heading), sin(rad_heading), cos(rad_heading));
 
   cv::Mat dx_dy = (cv::Mat_<double>(2,1) << tvec.at<double>(0,0), tvec.at<double>(0,1));
-
-  // std::cout << "dx_dy = " << dx_dy << std::endl << std::endl;
   
   cv::Mat rot_dx_dy = rot_mat * dx_dy;
   
-  // std::cout << "rot_dx_dy = " << rot_dx_dy << std::endl << std::endl;
+  if (pr_dbg) {
+    std::cout << "\trad_heading = " << rad_heading << std::endl << std::endl;
+    std::cout << "\tdx_dy = " << dx_dy << std::endl << std::endl;
+    std::cout << "\trot_dx_dy = " << rot_dx_dy << std::endl << std::endl;
+  }
 
   // delta translation from current template, will replace last_dpose at end of function
   float curr_dz_tmpl = tvec.at<double>(0,2);
   float curr_dx_tmpl = rot_dx_dy.at<double>(0,0);
   float curr_dy_tmpl = rot_dx_dy.at<double>(1,0);
 
-  // std::cout << "curr_dx_tmpl = " << curr_dx_tmpl << std::endl << std::endl;
-  // std::cout << "curr_dy_tmpl = " << curr_dy_tmpl << std::endl << std::endl;
-  // std::cout << "curr_dz_tmpl = " << curr_dz_tmpl << std::endl << std::endl;
+  if (pr_dbg) {
+    std::cout << "\tcurr_dx_tmpl = " << curr_dx_tmpl << std::endl << std::endl;
+    std::cout << "\tcurr_dy_tmpl = " << curr_dy_tmpl << std::endl << std::endl;
+    std::cout << "\tcurr_dz_tmpl = " << curr_dz_tmpl << std::endl << std::endl;
+  }
 
   double in_telem_wght = 0.5;
   double bp_telem_wght = 0.5;
@@ -162,7 +214,7 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
   double refined_z;
 
   // check valid telemetry inputs
-  if (global_x < 0 || global_y < 0) {
+  if (std::isinf(global_x) || std::isinf(global_y)) {
 
     refined_x = curr_dx_tmpl - last_dpose[0] + curr_pose[0];
     refined_y = curr_dy_tmpl - last_dpose[1] + curr_pose[1];
@@ -177,7 +229,7 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
   
   }
 
-  if (alt < 0) {
+  if (std::isinf(alt)) {
 
     refined_z = curr_dz_tmpl - last_dpose[2] + curr_pose[2];
 
@@ -188,14 +240,15 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
 
   }
 
-  // std::cout << "refined_x = " << refined_x << std::endl << std::endl;
-  // std::cout << "refined_y = " << refined_y << std::endl << std::endl;
-  // std::cout << "refined_z = " << refined_z << std::endl << std::endl;
-
   // create new template if translation too large
   double t_mag = curr_dx_tmpl * curr_dx_tmpl + curr_dy_tmpl * curr_dy_tmpl;
 
-  // std::cout << "t_mag = " << t_mag << std::endl << std::endl;
+  if (pr_dbg) {
+    std::cout << "\trefined_x = " << refined_x << std::endl << std::endl;
+    std::cout << "\trefined_y = " << refined_y << std::endl << std::endl;
+    std::cout << "\trefined_z = " << refined_z << std::endl << std::endl;
+    std::cout << "\tt_mag = " << t_mag << std::endl << std::endl;
+  }
 
   if (t_mag > max_t) {
 
@@ -228,8 +281,35 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
 
 void BPVO::set_template(cv::Mat I_tmp, double rp)
 {
-  std::cout << "[Template Update]" << std::endl << std::endl;
+  // std::cout << "[Template Update]" << std::endl << std::endl;
   template_set_fl = true;
   cv::Rect bbox(rp*I_tmp.cols, rp*I_tmp.rows, I_tmp.cols-2*rp*I_tmp.cols, I_tmp.rows-2*rp*I_tmp.rows);
   tracker.setTemplate(I_tmp, bbox);
+}
+
+// Calculates rotation matrix to euler angles
+// The result is the same as MATLAB except the order
+// of the euler angles ( x and z are swapped ).
+cv::Vec3f BPVO::rotationMatrixToEulerAngles(cv::Mat R)
+{
+      
+    float sy = sqrt(R.at<double>(0,0) * R.at<double>(0,0) +  R.at<double>(1,0) * R.at<double>(1,0) );
+ 
+    bool singular = sy < 1e-6; // If
+ 
+    float x, y, z;
+    if (!singular)
+    {
+        x = atan2(R.at<double>(2,1) , R.at<double>(2,2));
+        y = atan2(-R.at<double>(2,0), sy);
+        z = atan2(R.at<double>(1,0), R.at<double>(0,0));
+    }
+    else
+    {
+        x = atan2(-R.at<double>(1,2), R.at<double>(1,1));
+        y = atan2(-R.at<double>(2,0), sy);
+        z = 0;
+    }
+    return cv::Vec3f(x, y, z);
+
 }

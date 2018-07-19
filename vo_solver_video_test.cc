@@ -16,6 +16,10 @@ int main(int argc, char** argv)
     return 1;
   }
 
+  // std::cout << "EIGEN_WORLD_VERSION: " << EIGEN_WORLD_VERSION << std::endl;
+  // std::cout << "EIGEN_MAJOR_VERSION: " << EIGEN_MAJOR_VERSION << std::endl;
+  // std::cout << "EIGEN_MINOR_VERSION: " << EIGEN_MINOR_VERSION << std::endl;
+
   std::string config_file(argv[1]);
   std::string vname(argv[2]);
   int frame_start = bp::str2num<int>(argv[3]);
