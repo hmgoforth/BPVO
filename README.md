@@ -65,3 +65,61 @@ The input image to bpvo_module.solver must be non-null.
 
 Any of the telemetry inputs can be specified as -1. In this case, the function will ignore these
 inputs, but still use the current image I to compute a refined pose.
+
+### Simulation Test
+
+Compilation: ./build_vo_solver_dir.sh
+
+Running: ./vo_solver_dir config/config_cust.cfg path/to/frames/directory/ data/sm_telem.txt
+
+Expected Output:
+
+```
+reading images ... 
+reading csv ... 
+BitPlanes Parameters:
+MultiChannelFunction = BitPlanes
+ParameterTolerance = 0.00015
+FunctionTolerance = 0.0001
+NumLevels = 4
+sigma = 1.618
+verbose = 0
+subsampling = 2
+
+Starting loop
+frame 0 input telem = 
+	x: -1510.65
+	y: -2268.43
+	alt: 436.928
+	ch: 0
+refined pose = 
+	 x: -1510.65
+	 y: -2268.43
+	 z: 436.928
+	 h: 0
+
+.
+.
+.
+.
+.
+
+frame 169 input telem = 
+	x: -1509.08
+	y: -461.968
+	alt: 489.428
+	ch: inf
+refined pose = 
+	 x: -1519.42
+	 y: -474.938
+	 z: 489.314
+	 h: 96.8461
+
+.
+.
+.
+.
+.
+.
+
+```
