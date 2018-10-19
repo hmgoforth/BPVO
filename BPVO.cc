@@ -206,8 +206,8 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
     std::cout << "\tcurr_dz_tmpl = " << curr_dz_tmpl << std::endl << std::endl;
   }
 
-  double in_telem_wght = 0.8;
-  double bp_telem_wght = 0.2;
+  double in_telem_wght = 0.95;
+  double bp_telem_wght = 0.05;
 
   double refined_x;
   double refined_y;
