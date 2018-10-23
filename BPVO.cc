@@ -55,7 +55,7 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
   Returns:
     double*: pointer to array of refined telemetry (0:global_x, 1:global_y, 2:alt, 3:comp_heading)
   */
-  bool pr_dbg = false;
+  bool pr_dbg = true;
 
   if (!template_set_fl) {
    
@@ -248,6 +248,8 @@ double* BPVO::solver(double global_x, double global_y, double alt, double comp_h
     std::cout << "\trefined_y = " << refined_y << std::endl << std::endl;
     std::cout << "\trefined_z = " << refined_z << std::endl << std::endl;
     std::cout << "\tt_mag = " << t_mag << std::endl << std::endl;
+    std::cout << "\tin_telem_wght = " << in_telem_wght << std::endl << std::endl;
+    std::cout << "\tbp_telem_wght = " << bp_telem_wght << std::endl << std::endl;
   }
 
   if (t_mag > max_t) {
