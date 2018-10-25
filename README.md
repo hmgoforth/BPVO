@@ -123,3 +123,80 @@ refined pose =
 .
 
 ```
+
+### Stitching Update
+
+Building the test:
+
+./build_vo_solver_stitch_test.sh
+
+Running the test:
+
+./vo_solver_stitch_test config/config_cust.cfg '../Downloads/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12/\*.png' 10 ../Downloads/2018_10_21_aero_telem_csv_with_enu_coords_wrapped/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12_telem.csv
+
+Above commands runs BPVO on the given image directory of frames, starting at frame 10, using the telemetry file given in the CSV.
+
+Expected output:
+
+```
+	config_file = config/config_cust.cfg
+	frames_dir = ../Downloads/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12/*.png
+	frame_start = 10
+	telemetry_csv = ../Downloads/2018_10_21_aero_telem_csv_with_enu_coords_wrapped/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12_telem.csv
+
+K = 
+[1371.02208647, 0, 960;
+ 0, 1370.86986366, 540;
+ 0, 0, 1]
+BitPlanes Parameters:
+MultiChannelFunction = BitPlanes
+ParameterTolerance = 0.00015
+FunctionTolerance = 0.0001
+NumLevels = 4
+sigma = 1.618
+verbose = 0
+subsampling = 2
+
+- - - - - - - - - -
+
+FrameCounter: 10
+
+telem_pose: [0.661291,36.8684,-0.0021069,241.447,0.347121,0.107615]
+bpvo_pose: [0.661291,36.8684,-0.0021069,241.447,0.347121,0.107615,1]
+- - - - - - - - - -
+
+- - - - - - - - - -
+
+FrameCounter: 11
+
+telem_pose: [0.661291,36.8684,-0.0001069,241.455,0.348173,0.104558]
+bpvo_pose: [0.661295,36.8684,-0.00210788,241.454,0.457854,0.101602,1]
+- - - - - - - - - -
+
+- - - - - - - - - -
+
+FrameCounter: 12
+
+telem_pose: [0.661291,36.8684,0.0008931,241.459,0.347541,0.105259]
+bpvo_pose: [0.6613,36.8684,-0.00210555,241.532,0.543663,0.12601,1]
+- - - - - - - - - -
+
+- - - - - - - - - -
+
+FrameCounter: 13
+
+telem_pose: [0.661291,36.8684,0.0018931,241.462,0.348004,0.105254]
+bpvo_pose: [0.661305,36.8683,-0.00210555,241.528,0.697776,0.162052,1]
+- - - - - - - - - -
+
+- - - - - - - - - -
+.
+.
+.
+.
+.
+.
+.
+.
+
+```
