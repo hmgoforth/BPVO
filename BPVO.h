@@ -34,18 +34,24 @@ class BPVO
     cv::Mat K;
     bp::Matrix33f H_curr;
     double curr_pose[4];
+    double curr_pose_stitch[7];
+    double last_pose_stitch[6];
     double last_dpose[3];
     double class_rp;
     double max_t;
     bool template_set_fl;
+    cv::Mat template_img;
+    int max_iter;
 
     BPVO(std::string, cv::Mat);
 
-    double* solver(double global_x, double global_y, double alt, double comp_heading, cv::Mat I_curr); 
+    double* solver(double global_x, double global_y, double alt, double comp_heading, cv::Mat I_curr);
+    double* solver_stitch(double* telem_pose, cv::Mat I_curr);
 
     void set_template(cv::Mat I_tmp, double rp);
 
     cv::Vec3f rotationMatrixToEulerAngles(cv::Mat R);
+    cv::Vec3f rotationMatrixToEulerAnglesZXY(cv::Mat R);
 };
 
 #endif
