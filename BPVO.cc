@@ -45,6 +45,10 @@ BPVO::BPVO(std::string config_file, cv::Mat intrinsics)
   std::cout << params << std::endl << std::endl;
 }
 
+cv::Mat BPVO::batch_stitch(std::vector<cv::Mat> image_batch) {
+  cv::Mat stitched_image;
+  return stitched_image;
+}
     
 double* BPVO::solver(double global_x, double global_y, double alt, double comp_heading, cv::Mat I_curr)
 {   

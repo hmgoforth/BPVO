@@ -47,6 +47,7 @@ class BPVO
 
     double* solver(double global_x, double global_y, double alt, double comp_heading, cv::Mat I_curr);
     double* solver_stitch(double* telem_pose, cv::Mat I_curr);
+    cv::Mat batch_stitch(std::vector<cv::Mat> image_batch);
 
     void set_template(cv::Mat I_tmp, double rp);
 
