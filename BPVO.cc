@@ -1,6 +1,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
+#include "opencv2/stitching.hpp"
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -45,9 +46,69 @@ BPVO::BPVO(std::string config_file, cv::Mat intrinsics)
   std::cout << params << std::endl << std::endl;
 }
 
-cv::Mat BPVO::batch_stitch(std::vector<cv::Mat> image_batch) {
+std::tuple <cv::Mat,int,bool> BPVO::batch_stitch(std::vector<cv::Mat> image_batch) {
+  // in: vector of images to be stitched
+  // out: big stitched image, index of which input image used as reference frame, whether stitch went bad (true) or good (false)
+
+  bool pr_dbg = false;
+
   cv::Mat stitched_image;
-  return stitched_image;
+  cv::Stitcher::Mode mode = cv::Stitcher::SCANS;
+
+  bool use_gpu = false;
+  cv::Ptr<cv::Stitcher> stitcher = cv::Stitcher::create(mode, use_gpu);
+
+  if (pr_dbg) {
+    std::cout << "beginning stitching..." << std::endl;
+  }
+
+  cv::Stitcher::Status status = stitcher->stitch(image_batch, stitched_image);
+  
+  if (status != cv::Stitcher::OK) {
+    std::cout << "Problem stitching images..." << std::endl;
+    std::tuple <cv::Mat,int,bool> retval = std::make_tuple(stitched_image, -1, true);
+  }
+
+  if (pr_dbg) {
+    std::cout << "finished stitching..." << std::endl;
+  }
+
+  std::vector<cv::detail::CameraParams> pano_cams = stitcher->cameras();
+
+  if (pr_dbg) {
+    std::cout << "pano_cams.size(): " << pano_cams.size() << std::endl;
+  }
+
+  int iden_ind = -1;
+  for (uint i = 0; i < pano_cams.size(); i++) {
+
+
+    if (pr_dbg) {
+      std::cout << "pano_cams[" << i << "].R:" << std::endl <<
+      pano_cams[i].R << std::endl << std::endl;
+    }
+
+    cv::Mat diff = cv::abs(pano_cams[i].R - cv::Mat::eye(3,3,CV_32F));
+    cv::Scalar diff_sum_sc = cv::sum(diff);
+    double diff_sum = diff_sum_sc[0];
+    double tol = 1e-4;
+
+    if (pr_dbg) {
+      std::cout << "diff_sum: " << diff_sum << std::endl;
+    }
+
+    if (diff_sum < tol) {
+      iden_ind = i;
+    }
+  }
+
+  if (pr_dbg) {
+    std::cout << "iden_ind: " << iden_ind << std::endl;
+  }
+
+  std::tuple <cv::Mat,int,bool> retval = std::make_tuple(stitched_image, iden_ind, false);
+
+  return retval;
 }
     
 double* BPVO::solver(double global_x, double global_y, double alt, double comp_heading, cv::Mat I_curr)

@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 
   cv::Mat imrz, imbw;
 
-  double rescale_factor = 1.00;
+  double rescale_factor = 0.25;
   double fc[2] = {1371.02208647 * rescale_factor, 1370.86986366  * rescale_factor};
   double cc[2] = {960 * rescale_factor, 540 * rescale_factor};
   double kkparams[3][3] = {{fc[0], 0, cc[0]}, {0, fc[1], cc[1]}, {0, 0, 1.0000}};
@@ -65,6 +65,14 @@ int main(int argc, char** argv)
   for (int i=0; i<frame_start - 1; i++) {
     std::getline(infile, line, '\n');
   }
+
+  std::vector<cv::Mat> image_batch;
+  std::vector<std::string> image_batch_fnames;
+  cv::Mat stitch_output;
+
+  int frames_read = 0;
+  int max_frames_per_batch = 10;
+  std::tuple <cv::Mat, int, bool> retval;
 
   for (size_t i=(frame_start - 1); i<frames.size(); i++) {
     std::getline(infile, line, '\n');
@@ -117,68 +125,56 @@ int main(int argc, char** argv)
 
     line_stream.clear();
 
-    // std::cout << frameCounter << " "
-    // << frameFilename<< " "
-    // << timestampMS << " "
-    // << latitudeDeg << " "
-    // << longitudeDeg << " "
-    // << altitudeAMSL << " "
-    // << relativeAltMeters << " "
-    // << rollDeg << " "
-    // << pitchDeg << " "
-    // << yawDeg << " "
-    // << angleFromDownDeg << " "
-    // << ENUEastMeters << " "
-    // << ENUNorthMeters << " "
-    // << ENUAltMeters << " "
-    // << ENUCompHead << std::endl;
-
     std::cout << "- - - - - - - - - -" << std::endl << std::endl;
 
     std::cout <<
     "FrameCounter: " << frameCounter << std::endl << std::endl;
-    // "ENUEastMeters: " << ENUEastMeters << ", " <<
-    // "ENUNorthMeters: " << ENUNorthMeters << ", " <<
-    // "ENUAltMeters: " << ENUAltMeters << ", " <<
-    // "ENUCompassHeading: " << ENUCompHead << std::endl;
-
-    telem_pose[0] = ENUEastMeters;
-    telem_pose[1] = ENUNorthMeters;
-    telem_pose[2] = ENUAltMeters;
-    telem_pose[3] = ENUCompHead;
-    telem_pose[4] = pitchDeg;
-    telem_pose[5] = rollDeg;
 
     cv::Mat im = cv::imread(frames[i]);
-    cv::cvtColor(im, imbw, cv::COLOR_BGR2GRAY);
+    cv::resize(im, imrz, cv::Size(), rescale_factor, rescale_factor);
+    cv::imshow("Current Image", imrz);
+    cv::waitKey(0);
 
-    double* bpvo_pose;
-    bpvo_pose = bpvo_module.solver_stitch(telem_pose, imbw);
+    std::cout << "Frames Read: " << frames_read << std::endl;
 
-    std::cout << 
-      "telem_pose: [" 
-      << telem_pose[0] << ","
-      << telem_pose[1] << ","
-      << telem_pose[2] << ","
-      << telem_pose[3] << ","
-      << telem_pose[4] << ","
-      << telem_pose[5] << "]" << std::endl;
+    if (frames_read == max_frames_per_batch) {
+      std::cout << "batch full, calling batch stitch_output" << std::endl;
+      retval = bpvo_module.batch_stitch(image_batch);
+      cv::Mat stitch_output = std::get<0>(retval);
+      int iden_ind = std::get<1>(retval);
+      bool bad_out = std::get<2>(retval);
 
+      if (!bad_out) {
+        int half_height_img = image_batch[0].rows / 2;
+        int half_width_img = image_batch[0].cols / 2;
+        int half_width_stitch = stitch_output.cols / 2;
+        int half_height_stitch = stitch_output.rows / 2;
 
-    std::cout << 
-      "bpvo_pose: [" 
-      << bpvo_pose[0] << ","
-      << bpvo_pose[1] << ","
-      << bpvo_pose[2] << ","
-      << bpvo_pose[3] << ","
-      << bpvo_pose[4] << ","
-      << bpvo_pose[5] << ","
-      << bpvo_pose[6] << "]" << std::endl;
+        cv::Mat iden_img = image_batch[iden_ind].clone();
+        cv::circle(iden_img, 
+                  cv::Point(half_width_img,half_height_img),
+                  6, cv::Scalar(0,0,255),CV_FILLED, 8,0);
+
+        cv::imshow("Iden image", iden_img);
+
+        cv::circle(stitch_output, 
+              cv::Point(half_width_stitch,half_height_stitch),
+              6, cv::Scalar(0,0,255),CV_FILLED, 8,0);
+
+        cv::imshow("stitch output", stitch_output);
+      }
+
+      frames_read = 0;
+      image_batch.clear();
+      image_batch_fnames.clear();
+    }
+
+    image_batch.push_back(imrz.clone());
+    image_batch_fnames.push_back(frames[i]);
+
+    frames_read = frames_read + 1;
 
     std::cout << "- - - - - - - - - -" << std::endl << std::endl;
-
-    // cv::imshow("Display window", imrz); 
-    // cv::waitKey(0);
   }
 
   return 0;
