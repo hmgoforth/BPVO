@@ -33,19 +33,24 @@ class BPVO
     bp::BitPlanesTrackerPyramid<bp::Homography> tracker;
     cv::Mat K;
     bp::Matrix33f H_curr;
-    double curr_pose[4];
-    double last_dpose[3];
+    double last_pose[6];
+    cv::Mat last_img;
     double class_rp;
-    double max_t;
-    bool template_set_fl;
+    bool last_img_set_fl;
+    double max_from_down;
+    int max_before_tracker_refresh;
+    int skipped_in_a_row;
 
-    BPVO(std::string, cv::Mat);
+    BPVO(std::string, cv::Mat, double, int);
+    std::tuple<double*,int> solver(double*, cv::Mat);
+    cv::Mat pose_mat_from_telem(double* pose);
+    cv::Mat rot_mat_from_telem(double roll, double pitch, double yaw);
+    cv::Mat rot_mat_deg(double x, double y, double z);
+    std::tuple<cv::Mat,int> find_H_sift(cv::Mat curr_img,bool visualize);
+    cv::Mat combine_H_and_last_pose(cv::Mat H_last_to_curr, cv::Mat last_pose_mat);
+    double* rpy_enu_from_pose_mat(cv::Mat pose_mat);
+    cv::Vec3f rotation_matrix_to_euler_angles(cv::Mat R);
 
-    double* solver(double global_x, double global_y, double alt, double comp_heading, cv::Mat I_curr); 
-
-    void set_template(cv::Mat I_tmp, double rp);
-
-    cv::Vec3f rotationMatrixToEulerAngles(cv::Mat R);
 };
 
 #endif
