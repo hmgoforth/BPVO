@@ -44,7 +44,7 @@ curr_pose: length 6 array of [roll deg, pitch deg, yaw deg, east meters, north m
 
 curr_img: current 1080p RGB frame
 
-returns: tuple of refined pose (length 6 array of same format as curr_pose) and int flag. Flag values: refined pose is good (0), max angle from down exceeded, don't use refined pose (1), corrupted/bad frame (2).
+returns: tuple of refined pose (length 6 array of same format as curr_pose) and int flag. Flag values: refined pose is good (0), max angle from down exceeded, don't use refined pose (1), corrupted/bad frame, don't use refined pose (2).
 
 <!-- ### More Details
 
