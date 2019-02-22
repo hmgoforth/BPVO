@@ -10,7 +10,6 @@
 
 #include <BPVO.h>
 
-// static const char* USAGE = "%s <config_file> <video_name> <frame_start> [output file]\n";
 static const char* USAGE = "%s <bp_config_file> <telemetry_file> <frames_dir> <intrinsics_file> <start_frame> <end_frame> \n";
 
 /*
@@ -19,14 +18,29 @@ input:
   path to intrinsics file
   start frame and end frame
 output:
-  print old and new rpy enu, figure with images pasted in
+  print old and new rpy enu, mosaic figure with images pasted in
 */
 
 cv::Mat add_frame_to_mosaic(cv::Mat mosaic, cv::Mat pose_cam, cv::Mat im_rgb, cv::Mat K, int res, int buffer_x, int buffer_y, double min_x, double min_y) {
-	
+	// "bake" a frame into the current mosaic based on the camera pose for the frame
 
-	cv::Mat pose_cam_inv = pose_cam.inv();
-	cv::Mat camera_mat = K * pose_cam_inv.colRange(0,4).rowRange(0,3);
+	// '''
+	// Steps for adding frame to mosaic:
+	// 	1. Invert pose to get camera matrix version of R,t
+	// 	2. M = K * [R | t]
+	// 	3. Since all 3D points are assumed to be on world plane Z=0,
+	// 	   then we can remove 3rd column of M, creating a homography
+	// 	   between 3D points on world ground plane to the image plane of current frame
+	// 	4. Invert this homography to get mapping from image pixels to world coordinates
+	// 	5. Scale by the mosaic resolution
+	// 	6. Translate before adding to mosaic, to make sure the image will be added within the mosaic boundaries
+	// 	7. Warp image and add to mosaic
+	// '''
+
+	cv::Mat pose_cam_inv = pose_cam.inv(); // step 1
+	cv::Mat camera_mat = K * pose_cam_inv.colRange(0,4).rowRange(0,3); // step 2
+
+	// step 3
 	cv::Mat H_world_to_pix = cv::Mat::eye(3,3,CV_64F);
 	camera_mat.colRange(0,2).rowRange(0,3).copyTo(H_world_to_pix.colRange(0,2).rowRange(0,3));
 	camera_mat.colRange(3,4).rowRange(0,3).copyTo(H_world_to_pix.colRange(2,3).rowRange(0,3));
@@ -40,14 +54,17 @@ cv::Mat add_frame_to_mosaic(cv::Mat mosaic, cv::Mat pose_cam, cv::Mat im_rgb, cv
 	// std::cout << "H_world_to_pix" << std::endl;
 	// std::cout << H_world_to_pix << std::endl;
 
+	// step 4
 	cv::Mat H_pix_to_world = H_world_to_pix.inv();
 
+	// step 5
 	cv::Mat res_mat = cv::Mat::eye(3,3,CV_64F);
 	res_mat.at<double>(0,0) = (double)res;
 	res_mat.at<double>(1,1) = (double)res;
 
 	cv::Mat H_pix_to_world_scale = res_mat * H_pix_to_world;
 
+	// step 6
 	cv::Mat trans = cv::Mat::eye(3,3,CV_64F);
 	trans.at<double>(0,2) = (double)(res * (buffer_x - min_x));
 	trans.at<double>(1,2) = (double)(res * (buffer_y - min_y));
@@ -64,6 +81,7 @@ cv::Mat add_frame_to_mosaic(cv::Mat mosaic, cv::Mat pose_cam, cv::Mat im_rgb, cv
 	// std::cout << "H_pix_to_world_scale_trans" << std::endl;
 	// std::cout << H_pix_to_world_scale_trans << std::endl;
 
+	// step 7
 	cv::warpPerspective(im_rgb, warped_im, H_pix_to_world_scale_trans, cv::Size(mosaic_x_size, mosaic_y_size));
 	cv::warpPerspective(mask, warped_mask, H_pix_to_world_scale_trans, cv::Size(mosaic_x_size, mosaic_y_size));
 
@@ -86,8 +104,8 @@ cv::Mat add_frame_to_mosaic(cv::Mat mosaic, cv::Mat pose_cam, cv::Mat im_rgb, cv
 
 int main(int argc, char** argv) {
 	if (argc < 7) {
-	printf(USAGE, argv[0]);
-	return 1;
+		printf(USAGE, argv[0]);
+		return 1;
 	}
 
 	std::cout << "bp_config_file = " << argv[1] << std::endl;
@@ -302,80 +320,3 @@ int main(int argc, char** argv) {
 
 	return 0;
 }
-
-// int main(int argc, char** argv)
-// {
-//   if(argc < 4) {
-//     printf(USAGE, argv[0]);
-//     return 1;
-//   }
-
-//   // std::cout << "EIGEN_WORLD_VERSION: " << EIGEN_WORLD_VERSION << std::endl;
-//   // std::cout << "EIGEN_MAJOR_VERSION: " << EIGEN_MAJOR_VERSION << std::endl;
-//   // std::cout << "EIGEN_MINOR_VERSION: " << EIGEN_MINOR_VERSION << std::endl;
-
-//   std::string config_file(argv[1]);
-//   std::string vname(argv[2]);
-//   int frame_start = bp::str2num<int>(argv[3]);
-
-//   std::string output_video;
-//   if(argc > 4)
-//     output_video = std::string(argv[4]);
-
-//   cv::VideoCapture vcap(vname);
-//   THROW_ERROR_IF(!vcap.isOpened(), ("failed to open " + vname).c_str());
-
-//   // skip the few first messed up frames from the video compression
-//   cv::Mat I_orig, I;
-//   for(int i = 0; i < frame_start; ++i) {
-//     vcap >> I_orig;
-//     THROW_ERROR_IF(I_orig.empty(), "video was cut too short\n");
-//   }
-
-//   cv::Mat K = cv::Mat::eye(3, 3, CV_32F);
-
-//   BPVO bpvo_module(config_file, K);
-
-//   double total_time = 0.0;
-//   int f_i = 0;
-
-//   vcap >> I_orig;
-
-//   std::cout << "Starting loop" << std::endl;
-
-//   char text_buf[128];
-
-//   while(!I_orig.empty()) {
-
-//     cv::cvtColor(I_orig, I, cv::COLOR_BGR2GRAY);
-
-//     bp::Timer timer;
-
-//     double global_x = -1;
-//     double global_y = -1;
-//     double alt = 1;
-//     double comp_heading = 0;
-
-//     double * pose;
-
-//     pose = bpvo_module.solver(global_x, global_y, alt, comp_heading, I);
-
-//     std::cout << "pose = " << std::endl
-//       << "\t x: " << pose[0] << std::endl
-//       << "\t y: " << pose[1] << std::endl
-//       << "\t z: " << pose[2] << std::endl
-//       << "\t h: " << pose[3] << std::endl;
-
-//     total_time += timer.stop().count() / 1000.0;
-
-//     snprintf(text_buf, sizeof(text_buf), "Frame %05d @ %0.2f Hz", f_i, f_i / total_time);
-
-//     Info("%s\n", text_buf);
-
-//     vcap >> I_orig;
-//     ++f_i;
-
-//   }
-
-//   return 0;
-// }

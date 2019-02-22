@@ -80,12 +80,6 @@ std::tuple<double*,int> BPVO::solver(double* telem_curr_pose, cv::Mat curr_img) 
 		cv::Mat H_last_to_curr = std::get<0>(H_ret);
 		int H_bad = std::get<1>(H_ret);
 
-		// double temparr[3][3] = {{1.01117713e+00,1.71099460e-02,5.93614009e+00},
-		// 			      {2.14264573e-02,9.75923779e-01,1.24424284e+02},
-		// 			 	  {9.56987712e-06,2.04678403e-05,1.00000000e+00}};
-		// H_last_to_curr = cv::Mat(3,3,CV_64F);
-		// std::memcpy(H_last_to_curr.data, temparr, 3*3*sizeof(double));
-
 		if (H_bad == 0) {
 			skipped_in_a_row = 0;
 

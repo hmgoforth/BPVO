@@ -10,37 +10,23 @@
 
 ### Running
 
-./vo_solver_video_test config/config_cust.cfg data/flight1.mp4 1
+	./vo_solver_video_test config/config_cust.cfg path/to/telemetry.csv path/to/imagery/directory/ intrinsics.csv start_frame end_frame
 
-Expected output:
-```
-BitPlanes Parameters:
-MultiChannelFunction = BitPlanes
-ParameterTolerance = 0.00015
-FunctionTolerance = 0.0001
-NumLevels = 4
-sigma = 1.618
-verbose = 0
-subsampling = 2
+Examples:
 
-.
-.
-.
-.
-[ vo_solver_video_test.cc:0075 ]: Frame 00134 @ 19.49 Hz
-pose = 
-	 x: -335.664
-	 y: 339.097
-	 z: 1.16251
-	 h: 0
-.
-.
-.
-.
-.
-```
+	./vo_solver_video_test config/config_cust.cfg ~/Documents/2018_11_13_13_38_02_AERO5_imagery/2018_11_13_13_38_02_AERO5_imagery_telem.csv  ~/Documents/2018_11_13_13_38_02_AERO5_imagery/ ~/vista/intrinsics.csv 1964 1980
 
-### More Details
+	./vo_solver_video_test config/config_cust.cfg ~/Documents/2018_11_13_13_38_02_AERO5_imagery/2018_11_13_13_38_02_AERO5_imagery_telem.csv  ~/Documents/2018_11_13_13_38_02_AERO5_imagery/ ~/vista/intrinsics.csv 1922 1942
+
+	./vo_solver_video_test config/config_cust.cfg ~/Documents/2018_11_13_13_38_02_AERO5_imagery/2018_11_13_13_38_02_AERO5_imagery_telem.csv  ~/Documents/2018_11_13_13_38_02_AERO5_imagery/ ~/vista/intrinsics.csv 2032 2045
+
+	./vo_solver_video_test config/config_cust.cfg ~/Documents/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12_telem.csv  ~/Documents/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12/ ~/vista/intrinsics.csv 236 255
+
+### Output
+
+Should bring up window with frames being pasted in (like videos I sent earlier). Press any key to keep adding frames.
+
+<!-- ### More Details
 
 Instantiating a BPVO module:
 
@@ -64,9 +50,9 @@ returned as a pointer to a 1D array containing refined global_x, global_y, alt, 
 The input image to bpvo_module.solver must be non-null.
 
 Any of the telemetry inputs can be specified as INFINITY. In this case, the function will ignore these
-inputs, but still use the current image I to compute a refined pose.
+inputs, but still use the current image I to compute a refined pose. -->
 
-### Simulation Test
+<!-- ### Simulation Test
 
 Compilation: ./build_vo_solver_dir.sh
 
@@ -123,3 +109,4 @@ refined pose =
 .
 
 ```
+ -->
