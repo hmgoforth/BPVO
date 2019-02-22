@@ -14,13 +14,13 @@
 
 Examples:
 
-	./vo_solver_video_test config/config_cust.cfg ~/Documents/2018_11_13_13_38_02_AERO5_imagery/2018_11_13_13_38_02_AERO5_imagery_telem.csv  ~/Documents/2018_11_13_13_38_02_AERO5_imagery/ ~/vista/intrinsics.csv 1964 1980
+	./vo_solver_video_test config/config_cust.cfg ~/Documents/2018_11_13_13_38_02_AERO5_imagery/2018_11_13_13_38_02_AERO5_imagery_telem.csv  ~/Documents/2018_11_13_13_38_02_AERO5_imagery/ intrinsics.csv 1964 1980
 
-	./vo_solver_video_test config/config_cust.cfg ~/Documents/2018_11_13_13_38_02_AERO5_imagery/2018_11_13_13_38_02_AERO5_imagery_telem.csv  ~/Documents/2018_11_13_13_38_02_AERO5_imagery/ ~/vista/intrinsics.csv 1922 1942
+	./vo_solver_video_test config/config_cust.cfg ~/Documents/2018_11_13_13_38_02_AERO5_imagery/2018_11_13_13_38_02_AERO5_imagery_telem.csv  ~/Documents/2018_11_13_13_38_02_AERO5_imagery/ intrinsics.csv 1922 1942
 
-	./vo_solver_video_test config/config_cust.cfg ~/Documents/2018_11_13_13_38_02_AERO5_imagery/2018_11_13_13_38_02_AERO5_imagery_telem.csv  ~/Documents/2018_11_13_13_38_02_AERO5_imagery/ ~/vista/intrinsics.csv 2032 2045
+	./vo_solver_video_test config/config_cust.cfg ~/Documents/2018_11_13_13_38_02_AERO5_imagery/2018_11_13_13_38_02_AERO5_imagery_telem.csv  ~/Documents/2018_11_13_13_38_02_AERO5_imagery/ intrinsics.csv 2032 2045
 
-	./vo_solver_video_test config/config_cust.cfg ~/Documents/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12_telem.csv  ~/Documents/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12/ ~/vista/intrinsics.csv 236 255
+	./vo_solver_video_test config/config_cust.cfg ~/Documents/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12_telem.csv  ~/Documents/DroneAgentImageryLog_AERO3_2018_10_21_14_37_12/ intrinsics.csv 236 255
 
 ### Output
 
