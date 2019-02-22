@@ -6,7 +6,7 @@
 
 ### Compiling
 
-./build_vo_solver_video_test.sh
+	./build_vo_solver_video_test.sh
 
 ### Running
 
