@@ -26,6 +26,26 @@ Examples:
 
 Should bring up window with frames being pasted in (like videos I sent earlier). Press any key to keep adding frames.
 
+### BPVO Usage
+
+Instantiating:
+
+	BPVO bpvo(config_file, K, max_ang_from_down, max_frame_before_tracker_refresh);
+
+max_ang_from_down: as we've previously defined (I use 25 degrees in vo_solver_video_test)
+
+max_frame_before_tracker_refresh: if there is this many corrupted/bad frames in a row, then BPVO will have to 'reset' tracking because there is now no overlap between the next frame and the last good frame. BPVO.solver will return the telemetry input as refined pose for the next frame, and then continue tracking. (I found that 6 works okay for this number.)
+
+Solver:
+
+	BPVO.solver(curr_pose, curr_img)
+
+curr_pose: length 6 array of [roll deg, pitch deg, yaw deg, east meters, north meters, up meters] as defined in all telemetry csv files.
+
+curr_img: current 1080p RGB frame
+
+returns: tuple of refined pose (length 6 array of same format as curr_pose) and int flag. Flag values: refined pose is good (0), max angle from down exceeded, don't use refined pose (1), corrupted/bad frame (2).
+
 <!-- ### More Details
 
 Instantiating a BPVO module:

@@ -131,7 +131,6 @@ int main(int argc, char** argv) {
 	std::stringstream line_stream;
 	std::string line, line_item;
 
-
 	int num_data = end_frame - start_frame + 1;
 	int frameCounter[num_data];
 	long timestampMS[num_data];
